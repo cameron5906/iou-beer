@@ -10,6 +10,8 @@ A bot for Slack that keeps a tally of beer reactions and provides a leaderboard.
 @iou_beers iou [with prices] - List of people who you owe beers to, how many, and optionally the prices you'd pay
 
 @iou_beers leaderboard - Displays the top 5 list of people with the most beers owed to them
+
+@iou_beers clear - Admin only, clears out the beer database
 ```
 
 
