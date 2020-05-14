@@ -1,0 +1,23 @@
+{
+  "name": "iou-beer",
+  "version": "1.0.0",
+  "description": "A bot for Slack that keeps a tally of beer reactions and provides a leaderboard",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cameron5906/iou-beer.git"
+  },
+  "author": "Cameron Cooper",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cameron5906/iou-beer/issues"
+  },
+  "homepage": "https://github.com/cameron5906/iou-beer#readme",
+  "dependencies": {
+    "@slack/rtm-api": "^5.0.4",
+    "typescript": "^3.9.2"
+  }
+}
