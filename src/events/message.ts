@@ -4,7 +4,7 @@ import MongoService from "../services/MongoService";
 import SlackService from "../services/SlackService";
 import { Beer } from "../types/Beer";
 
-const { SLACK_BOT_ID, AVG_BEER_PRICE, BEER_EMOJI_NAME } = process.env;
+const { SLACK_BOT_ID, AVG_BEER_PRICE, BEER_EMOJI_NAME, CHECKMARK_EMOJI_NAME } = process.env;
 
 /**
  * Handles incoming messages. This will only process non-bot messages that have this bot tagged inside of it.
@@ -64,6 +64,13 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
             .join('\n');
 
         SlackService.sendMessageToChannel(event.channel, `Here are the top 5 people owed :${BEER_EMOJI_NAME}:\n` + leaderboard);
+        return;
+    }
+
+    //Clear the beers
+    if(command.indexOf("clear") === 0 && user.is_admin) {
+        await SlackService.addReaction(CHECKMARK_EMOJI_NAME as string, event.ts, event.channel);
+        await MongoService.clearBeers();
         return;
     }
 

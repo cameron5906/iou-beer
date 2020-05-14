@@ -11,6 +11,7 @@ ENV MONGO_USERNAME=""
 ENV MONGO_PASSWORD=""
 ENV MONGO_DB_NAME=""
 ENV BEER_EMOJI_NAME=""
+ENV CHECKMARK_EMOJI_NAME=""
 
 COPY package.json package.json
 COPY tsconfig.json tsconfig.json

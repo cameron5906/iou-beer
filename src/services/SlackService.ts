@@ -39,6 +39,20 @@ class SlackService {
     }
 
     /**
+     * Adds a reaction emoji to a message
+     * @param {string} reaction The reaction emoji name 
+     * @param {string} messageTs The timestamp of the message 
+     * @param {string} channelId The channel ID 
+     */
+    async addReaction(reaction: string, messageTs: string, channelId: string) {
+        await this.webClient.reactions.add({
+            name: reaction,
+            timestamp: messageTs,
+            channel: channelId
+        });
+    }
+
+    /**
      * Send a message to a channel
      * @param {string} channel The channel to send the message to 
      * @param {string} message The message to send 

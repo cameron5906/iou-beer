@@ -81,6 +81,13 @@ class MongoService {
     }
 
     /**
+     * Clear out all the beers
+     */
+    async clearBeers() {
+        await BeerModel.remove({});
+    }
+
+    /**
      * Get all of the beers ever sent
      */
     async getAllBeers(): Promise<Beer[]> {
