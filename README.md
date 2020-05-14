@@ -14,6 +14,16 @@ A bot for Slack that keeps a tally of beer reactions and provides a leaderboard.
 
 
 
+![image-20200514184427741](C:\Users\camer\AppData\Roaming\Typora\typora-user-images\image-20200514184427741.png)
+
+![image-20200514184446082](C:\Users\camer\AppData\Roaming\Typora\typora-user-images\image-20200514184446082.png)
+
+![image-20200514184458527](C:\Users\camer\AppData\Roaming\Typora\typora-user-images\image-20200514184458527.png)
+
+![image-20200514184508885](C:\Users\camer\AppData\Roaming\Typora\typora-user-images\image-20200514184508885.png)
+
+![image-20200514184519812](C:\Users\camer\AppData\Roaming\Typora\typora-user-images\image-20200514184519812.png)
+
 ## Run it yourself with Docker
 
 The process of setting this up for your own Slack workspace is very simple. I've created a docker-compose file that sets an environment up with the latest nodejs to run the app and a MongoDB server, everything is configurable.
