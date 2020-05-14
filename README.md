@@ -31,6 +31,7 @@ MONGO_PASSWORD={the password for the root user of the mongodb instance}
 MONGO_DB_NAME={the name of the mongodb database}
 AVG_BEER_PRICE={a floating point price of avg beer prices}
 BEER_EMOJI_NAME={customize which emoji in your workspace represents beer}
+CHECKMARK_EMOJI_NAME={customize which emoji in your workspace represents a checkmark (used for acknowledgement)}
 ```
 
 ##### Step 2. Run it!
