@@ -15,6 +15,10 @@ const handleReactionAddedEvent = async(user: SlackUser, event: SlackReactionAdde
 
     //Only react to beer
     if(event.reaction === BEER_EMOJI_NAME) {
+        if(user.id === event.item_user) {
+            SlackService.sendEphemeralMessage(user.id, event.item.channel, `You're going to go buy your own :${BEER_EMOJI_NAME}:? Good for you!`);
+        }
+
         const toUser = await SlackService.getUser(event.item_user);
         const message = await SlackService.getMessage(event.item.ts, event.item.channel);
         MongoService.addBeer(user, message);
