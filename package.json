@@ -4,7 +4,8 @@
   "description": "A bot for Slack that keeps a tally of beer reactions and provides a leaderboard",
   "main": "dist/index.js",
   "scripts": {
-    "start": "tsc && node dist/index.js"
+    "start": "tsc && cd dist && node index.js",
+    "stop": "docker stop iou-beer && docker rm iou-beer"
   },
   "repository": {
     "type": "git",
@@ -17,7 +18,18 @@
   },
   "homepage": "https://github.com/cameron5906/iou-beer#readme",
   "dependencies": {
+    "@hapi/hapi": "^19.1.1",
+    "@slack/events-api": "^2.3.2",
     "@slack/rtm-api": "^5.0.4",
+    "@slack/web-api": "^5.8.1",
+    "@types/node": "^12.7.0",
+    "mongodb": "^3.5.7",
+    "mongoose": "^5.9.14",
     "typescript": "^3.9.2"
+  },
+  "devDependencies": {
+    "@types/hapi__hapi": "^19.0.3",
+    "@types/mongodb": "^3.5.17",
+    "@types/mongoose": "^5.7.19"
   }
 }

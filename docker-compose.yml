@@ -1,0 +1,45 @@
+version: "3"
+services:
+    node:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "9003:80"
+        image: iou-beer
+        container_name: iou-beer
+        restart: unless-stopped
+        env_file: .env
+        environment:
+            - SLACK_BOT_ID=$SLACK_BOT_ID
+            - SLACK_TOKEN=$SLACK_TOKEN
+            - SLACK_SIGNING_TOKEN=$SLACK_SIGNING_TOKEN
+            - MONGO_USERNAME=$MONGO_USERNAME
+            - MONGO_PASSWORD=$MONGO_PASSWORD
+            - MONGO_HOST=db
+            - AVG_BEER_PRICE=$AVG_BEER_PRICE
+            - BEER_EMOJI_NAME=$BEER_EMOJI_NAME
+        networks:
+            - app-network
+        depends_on:
+                - db
+    db:
+        image: mongo:latest
+        container_name: iou-beer-mogodb
+        restart: unless-stopped
+        env_file: .env
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=$MONGO_USERNAME
+            - MONGO_INITDB_ROOT_PASSWORD=$MONGO_PASSWORD
+            - MONGO_INITDB_DATABASE=$MONGO_DB_NAME
+        ports:
+            - "27017:27017"
+        networks:
+            - app-network
+        volumes:
+            - iou_beer_mongodb:/data/db
+volumes:
+    iou_beer_mongodb:
+networks:
+    app-network:
+        driver: bridge
