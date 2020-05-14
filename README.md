@@ -16,7 +16,7 @@ A bot for Slack that keeps a tally of beer reactions and provides a leaderboard.
 
 ## Run it yourself with Docker
 
-The process of setting this up for your own Slack workspace is very simple. Here's how you do it:
+The process of setting this up for your own Slack workspace is very simple. I've created a docker-compose file that sets an environment up with the latest nodejs to run the app and a MongoDB server, everything is configurable.
 
 ##### Step 1. Create a **.env** file in the root of the project
 
