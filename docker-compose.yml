@@ -20,6 +20,8 @@ services:
             - AVG_BEER_PRICE=$AVG_BEER_PRICE
             - BEER_EMOJI_NAME=$BEER_EMOJI_NAME
             - ACKNOWLEDGEMENT_EMOJIS=$ACKNOWLEDGEMENT_EMOJIS
+            - BEER_COOLDOWN_MINUTES=$BEER_COOLDOWN_MINUTES
+            - BEER_COOLDOWN_COUNT=$BEER_COOLDOWN_COUNT
         networks:
             - app-network
         depends_on:

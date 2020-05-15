@@ -4,7 +4,7 @@ import MongoService from "../services/MongoService";
 import SlackService from "../services/SlackService";
 import { SlackMessageEvent } from "../types/SlackMessageEvent";
 
-const { BEER_EMOJI_NAME } = process.env;
+const { BEER_EMOJI_NAME, BEER_COOLDOWN_MINUTES, BEER_COOLDOWN_COUNT } = process.env;
 
 /**
  * This handles reaction add events to messages in a channel. Does not respond to anything but beer reactions.
@@ -45,12 +45,12 @@ const handleReactionAddedEvent = async(user: SlackUser, event: SlackReactionAdde
             );
         }
 
-        const beersLast5Minutes = await MongoService.getBeersGivenSince(user, new Date().getTime() - (1000 * 60 * 5));
-        if(beersLast5Minutes.length >= 5) {
+        const beersLast5Minutes = await MongoService.getBeersGivenSince(user, new Date().getTime() - (1000 * 60 * parseInt(BEER_COOLDOWN_MINUTES as string)));
+        if(beersLast5Minutes.length >= parseInt(BEER_COOLDOWN_COUNT as string)) {
             return SlackService.sendEphemeralMessage(
                 user.id,
                 event.item.channel, 
-                `Woah there ${user.name}, slow down! You're cut off for now (5 beers in 5 minutes.)`, 
+                `Woah there ${user.name}, slow down! You're cut off for now (${BEER_COOLDOWN_COUNT} beers in ${BEER_COOLDOWN_MINUTES} minutes.)`, 
                 {
                     user: message.user,
                     channel: message.channel,

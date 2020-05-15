@@ -5,7 +5,7 @@ import SlackService from "../services/SlackService";
 import { Beer } from "../types/Beer";
 import { getRandomAcknowledgementEmoji } from "../helpers";
 
-const { SLACK_BOT_ID, AVG_BEER_PRICE, BEER_EMOJI_NAME } = process.env;
+const { SLACK_BOT_ID, AVG_BEER_PRICE, BEER_EMOJI_NAME, BEER_COOLDOWN_COUNT, BEER_COOLDOWN_MINUTES } = process.env;
 
 /**
  * Handles incoming messages. This will only process non-bot messages that have this bot tagged inside of it.
@@ -32,12 +32,13 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
         return;
     //Otherwise, see if they want to give one or more people a beer directly by name
     } else if(!mentionsBot && mentionsBeer && taggedUsers.length > 0) {
-        const beersLast5Minutes = await MongoService.getBeersGivenSince(user, new Date().getTime() - (1000 * 60 * 5));
+        const beersLast5Minutes = await MongoService.getBeersGivenSince(user, new Date().getTime() - (1000 * 60 * parseInt(BEER_COOLDOWN_MINUTES as string)));
+        const availableBeer = parseInt(BEER_COOLDOWN_COUNT as string) - beersLast5Minutes.length;
 
-        if(beersLast5Minutes.length >= 5) {
-            return SlackService.sendMessageToChannel(event.channel, `Woah there ${user.name}, slow down! You're cut off for now (5 beers in 5 minutes.)`, event);
-        } else if(beersLast5Minutes.length - taggedUsers.length < 0) {
-            return SlackService.sendMessageToChannel(event.channel, `Sorry ${user.name}, you can't owe that many beers right now... (5 beers in 5 minutes, available: ${(5 - beersLast5Minutes.length)})`, event);
+        if(beersLast5Minutes.length >= parseInt(BEER_COOLDOWN_COUNT as string)) {
+            return SlackService.sendMessageToChannel(event.channel, `Woah there ${user.name}, slow down! You're cut off for now (${BEER_COOLDOWN_COUNT} beers in ${BEER_COOLDOWN_MINUTES} minutes.)`, event);
+        } else if(availableBeer - taggedUsers.length < 0) {
+            return SlackService.sendMessageToChannel(event.channel, `Sorry ${user.name}, you can't owe that many beers right now... (${BEER_COOLDOWN_COUNT} beers in ${BEER_COOLDOWN_MINUTES} minutes, available: ${availableBeer})`, event);
         }
 
         taggedUsers.forEach(slackId => {
