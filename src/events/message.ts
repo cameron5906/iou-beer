@@ -15,26 +15,28 @@ const { SLACK_BOT_ID, AVG_BEER_PRICE, BEER_EMOJI_NAME } = process.env;
 const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
     if(user.is_bot) return; //Ignore bot messages
 
+    const messageDetails = await SlackService.getMessage(event.ts, event.channel);
     const mentionsBot = event.text.indexOf(`<@${SLACK_BOT_ID}>`) !== -1;
+    const mentionsBeer = event.text.indexOf(`:${BEER_EMOJI_NAME}:`) !== -1;
     let taggedUsers = event.text.match(/(?<=\<@)(.*?)(?=\>)/g) || [];
     taggedUsers = taggedUsers.filter(id => id !== SLACK_BOT_ID && id !== user.id); //don't allow the user themself or this bot
 
     //Check if they are asking how many beers is owed by a single person
-    if(!mentionsBot && taggedUsers.length === 1 && event.text.indexOf(`:${BEER_EMOJI_NAME}:?`) !== -1) {
+    if(!mentionsBot && taggedUsers.length === 1 && mentionsBeer && event.text.split(`:${BEER_EMOJI_NAME}:`)[1].indexOf('?') < 3) {
         const beers = await MongoService.getBeers(user.id);
         const fromUser = beers.filter(beer => beer.from_slack_id === taggedUsers[0]);
-        await SlackService.sendMessageToChannel(event.channel, `<@${taggedUsers[0]}> owes you ${fromUser.length} beer${fromUser.length === 1 ? '' : 's'}`);
+        await SlackService.sendMessageToChannel(event.channel, `<@${taggedUsers[0]}> owes you ${fromUser.length} beer${fromUser.length === 1 ? '' : 's'}`, event);
 
         return;
     //Otherwise, see if they want to give one or more people a beer directly by name
-    } else if(!mentionsBot && event.text.indexOf(BEER_EMOJI_NAME as string) !== -1 && taggedUsers.length > 0) {
+    } else if(!mentionsBot && mentionsBeer && taggedUsers.length > 0) {
         taggedUsers.forEach(slackId => {
             MongoService.addBeer(user, slackId, null);
             SlackService.sendIM(slackId, `<@${user.id}> owes you a :${BEER_EMOJI_NAME}:!`);
         });
 
         SlackService.addReaction(getRandomAcknowledgementEmoji(), event.ts, event.channel);
-        SlackService.sendEphemeralMessage(user.id, event.channel, `You owe ${taggedUsers.map(id => `<@${id}>`).join(', ')} a :${BEER_EMOJI_NAME}:`);
+        SlackService.sendEphemeralMessage(user.id, event.channel, `You owe ${taggedUsers.map(id => `<@${id}>`).join(', ')} a :${BEER_EMOJI_NAME}:`, event);
 
         return;
     }
@@ -48,11 +50,16 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
         const includePrice = command.indexOf('price') !== -1;
         const beers = await MongoService.getBeers(user.id);
 
-        if(beers.length === 0) return SlackService.sendMessageToChannel(event.channel, `<@${user.id}>, nobody owes you any :${BEER_EMOJI_NAME}:`);
+        if(beers.length === 0) return SlackService.sendMessageToChannel(event.channel, `<@${user.id}>, nobody owes you any :${BEER_EMOJI_NAME}:`, event);
 
         const totalPrice = (parseFloat(AVG_BEER_PRICE as string) * beers.length).toFixed(2);
 
-        SlackService.sendMessageToChannel(event.channel, makeBeerList(`You are owed ${includePrice ? `~$${totalPrice} worth of :${BEER_EMOJI_NAME}:` : `${beers.length} :${BEER_EMOJI_NAME}:'s`}`, beers, includePrice));
+        SlackService.sendMessageToChannel(
+            event.channel, 
+            makeBeerList(`You are owed ${includePrice ? `~$${totalPrice} worth of :${BEER_EMOJI_NAME}:` : `${beers.length} :${BEER_EMOJI_NAME}:'s`}`, 
+            beers, 
+            includePrice
+        ), event);
         return;
     }
 
@@ -61,11 +68,16 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
         const includePrice = command.indexOf('price') !== -1;
         const beers = await MongoService.getBeersSent(user.id);
 
-        if(beers.length === 0) return SlackService.sendMessageToChannel(event.channel, `<@${user.id}>, you don't owe anybody :${BEER_EMOJI_NAME}:`);
+        if(beers.length === 0) return SlackService.sendMessageToChannel(event.channel, `<@${user.id}>, you don't owe anybody :${BEER_EMOJI_NAME}:`, event);
 
         const totalPrice = (parseFloat(AVG_BEER_PRICE as string) * beers.length).toFixed(2);
 
-        SlackService.sendMessageToChannel(event.channel, makeBeerList(`<@${user.id}>, you owe the following people ${includePrice ? `~$${totalPrice} worth of` : `a`} :${BEER_EMOJI_NAME}:`, beers, includePrice));
+        SlackService.sendMessageToChannel(
+            event.channel, 
+            makeBeerList(`<@${user.id}>, you owe the following people ${includePrice ? `~$${totalPrice} worth of` : `a`} :${BEER_EMOJI_NAME}:`, 
+            beers, 
+            includePrice
+        ), event);
         return;
     }
 
@@ -73,7 +85,7 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
     if(command.indexOf("leaderboard") === 0) {
         const beers = await MongoService.getAllBeers();
 
-        if(beers.length === 0) return SlackService.sendMessageToChannel(event.channel, `Nobody owes anyone :${BEER_EMOJI_NAME}:!`);
+        if(beers.length === 0) return SlackService.sendMessageToChannel(event.channel, `Nobody owes anyone :${BEER_EMOJI_NAME}:!`, event);
 
         let beerMap = {} as { [slackId: string]: number };
 
@@ -98,7 +110,7 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
             )
             .join('\n');
 
-        SlackService.sendMessageToChannel(event.channel, `Here are the top 5 people owed :${BEER_EMOJI_NAME}:\n` + leaderboard);
+        SlackService.sendMessageToChannel(event.channel, `Here are the top 5 people owed :${BEER_EMOJI_NAME}:\n` + leaderboard, event);
         return;
     }
 
@@ -109,7 +121,7 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
         return;
     }
 
-    SlackService.sendEphemeralMessage(user.id, event.channel, `Sorry, that's not a valid command. Try "list", "iou", or "leaderboard"`);
+    SlackService.sendEphemeralMessage(user.id, event.channel, `Sorry, that's not a valid command. Try "list", "iou", or "leaderboard"`, event);
 }
 
 /**

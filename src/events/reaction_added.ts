@@ -2,6 +2,7 @@ import { SlackUser } from "../types/SlackUser";
 import { SlackReactionAddedEvent } from "../types/SlackReactionAddedEvent";
 import MongoService from "../services/MongoService";
 import SlackService from "../services/SlackService";
+import { SlackMessageEvent } from "../types/SlackMessageEvent";
 
 const { BEER_EMOJI_NAME } = process.env;
 
@@ -15,16 +16,35 @@ const handleReactionAddedEvent = async(user: SlackUser, event: SlackReactionAdde
 
     //Only react to beer
     if(event.reaction === BEER_EMOJI_NAME) {
-        if(user.id === event.item_user) {
-            return SlackService.sendEphemeralMessage(user.id, event.item.channel, `You're going to go buy your own :${BEER_EMOJI_NAME}:? Good for you!`);
-        }
-
         const toUser = await SlackService.getUser(event.item_user);
         const message = await SlackService.getMessage(event.item.ts, event.item.channel);
+        
+        if(user.id === event.item_user) {
+            return SlackService.sendEphemeralMessage(
+                user.id, 
+                event.item.channel, 
+                `You're going to go buy your own :${BEER_EMOJI_NAME}:? Good for you!`, 
+                { 
+                    user: message.user, 
+                    channel: message.channel, 
+                    ts: message.ts 
+                } as SlackMessageEvent
+            );
+        }
+
         MongoService.addBeer(user, message.user, message);
     
         SlackService.sendIM(toUser.id, `<@${user.id}> owes you a beer :${BEER_EMOJI_NAME}:!`);
-        SlackService.sendEphemeralMessage(user.id, event.item.channel, `You owe ${toUser.real_name} a :${BEER_EMOJI_NAME}:!`);
+        SlackService.sendEphemeralMessage(
+            user.id, 
+            event.item.channel, 
+            `You owe ${toUser.real_name} a :${BEER_EMOJI_NAME}:!`, 
+            { 
+                user: message.user, 
+                channel: message.channel, 
+                ts: message.ts
+            } as SlackMessageEvent
+        );
     }
 }
 

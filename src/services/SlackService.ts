@@ -1,6 +1,7 @@
 import { WebClient } from '@slack/web-api';
 import { SlackUser } from '../types/SlackUser';
 import { SlackMessage } from '../types/SlackMessage';
+import { SlackMessageEvent } from '../types/SlackMessageEvent';
 
 const { SLACK_TOKEN } = process.env;
 
@@ -52,19 +53,27 @@ class SlackService {
         });
     }
 
+    
     /**
      * Send a message to a channel
      * @param {string} channel The channel to send the message to 
      * @param {string} message The message to send 
+     * @param {SlackMessageEvent} replyingTo Message that we are replying to
      */
-    async sendMessageToChannel(channel: string, message: string) {
+    async sendMessageToChannel(channel: string, message: string, replyingTo: SlackMessageEvent) {
+        //If replying to a specific message, check if it's in a thread first. If it is, use the replyToMessage function
+        const messageDetails = await this.getMessage(replyingTo.ts, replyingTo.channel);
+        if(messageDetails.thread_ts) {
+            return this.replyToMessage(messageDetails.channel, messageDetails.thread_ts, message, null);
+        }
+
         this.webClient.chat.postMessage({
             channel,
             text: message,
             username: 'IOU Beer Bot'
         });
     }
-
+    
     /**
      * Send a message privately to a user
      * @param {string} targetId The user to send the message to 
@@ -84,7 +93,12 @@ class SlackService {
      * @param {string} channelId The channel to send to 
      * @param {string} message The message to send 
      */
-    async sendEphemeralMessage(targetId: string, channelId: string, message: string) {
+    async sendEphemeralMessage(targetId: string, channelId: string, message: string, replyingTo: SlackMessageEvent) {
+        const messageDetails = await this.getMessage(replyingTo.ts, replyingTo.channel);
+        if(messageDetails.thread_ts) {
+            return this.replyToMessage(messageDetails.channel, messageDetails.thread_ts, message, replyingTo.user);
+        }
+
         this.webClient.chat.postEphemeral({
             channel: channelId,
             attachments: [],
@@ -112,6 +126,29 @@ class SlackService {
         } else {
 
             throw response.error;
+        }
+    }
+
+    /**
+     * Replies to a message in a channel
+     * @param {string} channel The ID of the channel containing the message 
+     * @param {string} messageTs The timestamp identifier of the message 
+     * @param {string} reply The reply text 
+     */
+    private async replyToMessage(channel: string, messageTs: string, reply: string, toUser: string | null) {
+        if(toUser) {
+            this.webClient.chat.postEphemeral({
+                user: toUser,
+                channel,
+                text: reply,
+                thread_ts: messageTs
+            });
+        } else {
+            this.webClient.chat.postMessage({
+                channel,
+                text: reply,
+                thread_ts: messageTs
+            });
         }
     }
 }

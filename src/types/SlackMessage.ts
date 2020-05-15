@@ -3,6 +3,7 @@ export interface SlackMessage {
     user: string;
     channel: string;
     text: string;
+    thread_ts?: string;
     attachments: {
         service_name: string;
         text: string;
