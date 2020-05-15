@@ -13,7 +13,25 @@ const { SLACK_BOT_ID, AVG_BEER_PRICE, BEER_EMOJI_NAME, CHECKMARK_EMOJI_NAME } = 
  */
 const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
     if(user.is_bot) return; //Ignore bot messages
-    if(event.text.indexOf(SLACK_BOT_ID as string) === -1) return; //Ignore messages not targeted to this bot
+
+    if(event.text.indexOf(BEER_EMOJI_NAME as string) !== -1) {
+        const slackIds = event.text.match(/(?<=\<@)(.*?)(?=\>)/g);
+        if(slackIds) {
+            const validIds = slackIds.filter(id => id !== SLACK_BOT_ID && id !== user.id);
+            if(validIds.length > 0) {
+                validIds.forEach(slackId => {
+                    MongoService.addBeer(user, slackId, null);
+                    SlackService.sendIM(slackId, `<@${user.id}> owes you a :${BEER_EMOJI_NAME}:!`);
+                });
+
+                SlackService.addReaction(BEER_EMOJI_NAME as string, event.ts, event.channel);
+                SlackService.sendEphemeralMessage(user.id, event.channel, `You owe ${validIds.map(id => `<@${id}>`).join(', ')} a :${BEER_EMOJI_NAME}:`);
+            }
+            return;
+        }
+    }
+
+    if(event.text.indexOf(`<@${SLACK_BOT_ID}>`) == -1) return; //can't send a command without tagging the bot
 
     const command = event.text.split(`<@${SLACK_BOT_ID}>`)[1].trim();
 
@@ -26,7 +44,7 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
 
         const totalPrice = (parseFloat(AVG_BEER_PRICE as string) * beers.length).toFixed(2);
 
-        SlackService.sendIM(user.id, makeBeerList(`You are owed ${includePrice ? `~$${totalPrice} worth of :${BEER_EMOJI_NAME}:` : `${beers.length} :${BEER_EMOJI_NAME}:'s`}`, beers, includePrice));
+        SlackService.sendMessageToChannel(event.channel, makeBeerList(`You are owed ${includePrice ? `~$${totalPrice} worth of :${BEER_EMOJI_NAME}:` : `${beers.length} :${BEER_EMOJI_NAME}:'s`}`, beers, includePrice));
         return;
     }
 
@@ -39,7 +57,7 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
 
         const totalPrice = (parseFloat(AVG_BEER_PRICE as string) * beers.length).toFixed(2);
 
-        SlackService.sendIM(user.id, makeBeerList(`<@${user.id}>, you owe the following people ${includePrice ? `~$${totalPrice} worth of` : `a`} :${BEER_EMOJI_NAME}:`, beers, includePrice));
+        SlackService.sendMessageToChannel(event.channel, makeBeerList(`<@${user.id}>, you owe the following people ${includePrice ? `~$${totalPrice} worth of` : `a`} :${BEER_EMOJI_NAME}:`, beers, includePrice));
         return;
     }
 

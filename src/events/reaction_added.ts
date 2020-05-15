@@ -21,9 +21,9 @@ const handleReactionAddedEvent = async(user: SlackUser, event: SlackReactionAdde
 
         const toUser = await SlackService.getUser(event.item_user);
         const message = await SlackService.getMessage(event.item.ts, event.item.channel);
-        MongoService.addBeer(user, message);
+        MongoService.addBeer(user, message.user, message);
     
-        SlackService.sendIM(toUser.id, `<@${toUser.id}> owes you a beer! :${BEER_EMOJI_NAME}:`);
+        SlackService.sendIM(toUser.id, `<@${user.id}> owes you a beer :${BEER_EMOJI_NAME}:!`);
         SlackService.sendEphemeralMessage(user.id, event.item.channel, `You owe ${toUser.real_name} a :${BEER_EMOJI_NAME}:!`);
     }
 }

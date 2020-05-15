@@ -37,17 +37,17 @@ class MongoService {
      * @param {SlackUser} giver The user giving the beer 
      * @param {SlackMessage} message The message containing the {@link SlackUser} to send the beer to 
      */
-    async addBeer(giver: SlackUser, message: SlackMessage) {
+    async addBeer(giver: SlackUser, userId: string, message: SlackMessage | null) {
         const beer = await BeerModel.create({
             from_slack_id: giver.id,
-            to_slack_id: message.user,
+            to_slack_id: userId,
             sent_at: new Date().getTime(),
-            message: MessageModel.create({ 
+            message: message ? MessageModel.create({ 
                 user_slack_id: message.user, 
                 text: message.text, 
                 channel: message.channel, 
                 sent_at: Math.floor(parseInt(message.ts) * 1000) 
-            })
+            }) : null
         });
 
         await beer.save();
