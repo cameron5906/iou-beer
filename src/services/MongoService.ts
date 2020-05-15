@@ -4,10 +4,9 @@ import BeerModel from "../entities/Beer.model";
 import MessageModel from "../entities/Message.model";
 import { SlackMessage } from "../types/SlackMessage";
 import { Beer } from '../types/Beer';
+import { wait } from '../helpers';
 
 const { MONGO_HOST, MONGO_USERNAME, MONGO_PASSWORD, MONGO_DB_NAME } = process.env;
-
-const wait = (millis: number) => new Promise((resolve) => setTimeout(resolve, millis));
 
 class MongoService {
     constructor() {

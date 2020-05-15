@@ -3,8 +3,9 @@ import { SlackUser } from "../types/SlackUser";
 import MongoService from "../services/MongoService";
 import SlackService from "../services/SlackService";
 import { Beer } from "../types/Beer";
+import { getRandomAcknowledgementEmoji } from "../helpers";
 
-const { SLACK_BOT_ID, AVG_BEER_PRICE, BEER_EMOJI_NAME, CHECKMARK_EMOJI_NAME } = process.env;
+const { SLACK_BOT_ID, AVG_BEER_PRICE, BEER_EMOJI_NAME } = process.env;
 
 /**
  * Handles incoming messages. This will only process non-bot messages that have this bot tagged inside of it.
@@ -24,7 +25,7 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
                     SlackService.sendIM(slackId, `<@${user.id}> owes you a :${BEER_EMOJI_NAME}:!`);
                 });
 
-                SlackService.addReaction(BEER_EMOJI_NAME as string, event.ts, event.channel);
+                SlackService.addReaction(getRandomAcknowledgementEmoji(), event.ts, event.channel);
                 SlackService.sendEphemeralMessage(user.id, event.channel, `You owe ${validIds.map(id => `<@${id}>`).join(', ')} a :${BEER_EMOJI_NAME}:`);
             }
             return;
@@ -96,7 +97,7 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
 
     //Clear the beers
     if(command.indexOf("clear") === 0 && user.is_admin) {
-        await SlackService.addReaction(CHECKMARK_EMOJI_NAME as string, event.ts, event.channel);
+        await SlackService.addReaction(getRandomAcknowledgementEmoji(), event.ts, event.channel);
         await MongoService.clearBeers();
         return;
     }

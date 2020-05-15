@@ -19,7 +19,7 @@ services:
             - MONGO_HOST=db
             - AVG_BEER_PRICE=$AVG_BEER_PRICE
             - BEER_EMOJI_NAME=$BEER_EMOJI_NAME
-            - CHECKMARK_EMOJI_NAME=$CHECKMARK_EMOJI_NAME
+            - ACKNOWLEDGEMENT_EMOJIS=$ACKNOWLEDGEMENT_EMOJIS
         networks:
             - app-network
         depends_on:
