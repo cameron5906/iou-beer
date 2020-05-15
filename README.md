@@ -5,6 +5,10 @@ A bot for Slack that keeps a tally of beer reactions and provides a leaderboard.
 #### Commands
 
 ```
+@person :beer: - Gives a person a beer directly
+
+@person :beer:? - Gets the amount of beers owed by one person
+
 @iou_beers list [with prices] - List of people who owe you beers, how many, and optionally the prices they pay
 
 @iou_beers iou [with prices] - List of people who you owe beers to, how many, and optionally the prices you'd pay
@@ -31,7 +35,7 @@ MONGO_PASSWORD={the password for the root user of the mongodb instance}
 MONGO_DB_NAME={the name of the mongodb database}
 AVG_BEER_PRICE={a floating point price of avg beer prices}
 BEER_EMOJI_NAME={customize which emoji in your workspace represents beer}
-CHECKMARK_EMOJI_NAME={customize which emoji in your workspace represents a checkmark (used for acknowledgement)}
+ACKNOWLEDGEMENT_EMOJIS={comma separated emoji list that the bot uses to acknowledge certain commands}
 ```
 
 ##### Step 2. Run it!
