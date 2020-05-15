@@ -15,24 +15,31 @@ const { SLACK_BOT_ID, AVG_BEER_PRICE, BEER_EMOJI_NAME } = process.env;
 const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
     if(user.is_bot) return; //Ignore bot messages
 
-    if(event.text.indexOf(BEER_EMOJI_NAME as string) !== -1) {
-        const slackIds = event.text.match(/(?<=\<@)(.*?)(?=\>)/g);
-        if(slackIds) {
-            const validIds = slackIds.filter(id => id !== SLACK_BOT_ID && id !== user.id);
-            if(validIds.length > 0) {
-                validIds.forEach(slackId => {
-                    MongoService.addBeer(user, slackId, null);
-                    SlackService.sendIM(slackId, `<@${user.id}> owes you a :${BEER_EMOJI_NAME}:!`);
-                });
+    const mentionsBot = event.text.indexOf(`<@${SLACK_BOT_ID}>`) !== -1;
+    let taggedUsers = event.text.match(/(?<=\<@)(.*?)(?=\>)/g) || [];
+    taggedUsers = taggedUsers.filter(id => id !== SLACK_BOT_ID && id !== user.id); //don't allow the user themself or this bot
 
-                SlackService.addReaction(getRandomAcknowledgementEmoji(), event.ts, event.channel);
-                SlackService.sendEphemeralMessage(user.id, event.channel, `You owe ${validIds.map(id => `<@${id}>`).join(', ')} a :${BEER_EMOJI_NAME}:`);
-            }
-            return;
-        }
+    //Check if they are asking how many beers is owed by a single person
+    if(!mentionsBot && taggedUsers.length === 1 && event.text.indexOf(`:${BEER_EMOJI_NAME}:?`) !== -1) {
+        const beers = await MongoService.getBeers(user.id);
+        const fromUser = beers.filter(beer => beer.from_slack_id === taggedUsers[0]);
+        await SlackService.sendMessageToChannel(event.channel, `<@${taggedUsers[0]}> owes you ${fromUser.length} beer${fromUser.length === 1 ? '' : 's'}`);
+
+        return;
+    //Otherwise, see if they want to give one or more people a beer directly by name
+    } else if(!mentionsBot && event.text.indexOf(BEER_EMOJI_NAME as string) !== -1 && taggedUsers.length > 0) {
+        taggedUsers.forEach(slackId => {
+            MongoService.addBeer(user, slackId, null);
+            SlackService.sendIM(slackId, `<@${user.id}> owes you a :${BEER_EMOJI_NAME}:!`);
+        });
+
+        SlackService.addReaction(getRandomAcknowledgementEmoji(), event.ts, event.channel);
+        SlackService.sendEphemeralMessage(user.id, event.channel, `You owe ${taggedUsers.map(id => `<@${id}>`).join(', ')} a :${BEER_EMOJI_NAME}:`);
+
+        return;
     }
 
-    if(event.text.indexOf(`<@${SLACK_BOT_ID}>`) == -1) return; //can't send a command without tagging the bot
+    if(!mentionsBot) return; //can't send a command without tagging the bot
 
     const command = event.text.split(`<@${SLACK_BOT_ID}>`)[1].trim();
 
