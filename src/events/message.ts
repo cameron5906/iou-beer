@@ -22,7 +22,7 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
     taggedUsers = taggedUsers.filter(id => id !== SLACK_BOT_ID && id !== user.id); //don't allow the user themself or this bot
 
     //Check if they are asking how many beers is owed by a single person
-    if(!mentionsBot && taggedUsers.length === 1 && mentionsBeer && event.text.split(`:${BEER_EMOJI_NAME}:`)[1].indexOf('?') < 3) {
+    if(!mentionsBot && taggedUsers.length === 1 && mentionsBeer && event.text.split(`:${BEER_EMOJI_NAME}:`)[1].indexOf('?') > -1) {
         const beers = await MongoService.getBeers(user.id);
         const fromUser = beers.filter(beer => beer.from_slack_id === taggedUsers[0]);
         if(fromUser.length === 0) return SlackService.sendMessageToChannel(event.channel, `<@${taggedUsers[0]}> doesn't owe you anything...`, event);
