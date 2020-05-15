@@ -32,6 +32,33 @@ const handleReactionAddedEvent = async(user: SlackUser, event: SlackReactionAdde
             );
         }
 
+        if(await MongoService.doesBeerAlreadyExist(user, message.user, message)) {
+            return SlackService.sendEphemeralMessage(
+                user.id,
+                event.item.channel,
+                `Oh, trying to game the system for :${BEER_EMOJI_NAME}: huh?`,
+                {
+                    user: message.user,
+                    channel: message.channel,
+                    ts: message.ts
+                } as SlackMessageEvent
+            );
+        }
+
+        const beersLast5Minutes = await MongoService.getBeersGivenSince(user, new Date().getTime() - (1000 * 60 * 5));
+        if(beersLast5Minutes.length >= 5) {
+            return SlackService.sendEphemeralMessage(
+                user.id,
+                event.item.channel, 
+                `Woah there ${user.name}, slow down! You're cut off for now (5 beers in 5 minutes.)`, 
+                {
+                    user: message.user,
+                    channel: message.channel,
+                    ts: message.ts
+                } as SlackMessageEvent
+            )
+        }
+
         MongoService.addBeer(user, message.user, message);
     
         SlackService.sendIM(toUser.id, `<@${user.id}> owes you a beer :${BEER_EMOJI_NAME}:!`);

@@ -25,11 +25,21 @@ const handleMessageEvent = async(user: SlackUser, event: SlackMessageEvent) => {
     if(!mentionsBot && taggedUsers.length === 1 && mentionsBeer && event.text.split(`:${BEER_EMOJI_NAME}:`)[1].indexOf('?') < 3) {
         const beers = await MongoService.getBeers(user.id);
         const fromUser = beers.filter(beer => beer.from_slack_id === taggedUsers[0]);
+        if(fromUser.length === 0) return SlackService.sendMessageToChannel(event.channel, `<@${taggedUsers[0]}> doesn't owe you anything...`, event);
+        
         await SlackService.sendMessageToChannel(event.channel, `<@${taggedUsers[0]}> owes you ${fromUser.length} beer${fromUser.length === 1 ? '' : 's'}`, event);
 
         return;
     //Otherwise, see if they want to give one or more people a beer directly by name
     } else if(!mentionsBot && mentionsBeer && taggedUsers.length > 0) {
+        const beersLast5Minutes = await MongoService.getBeersGivenSince(user, new Date().getTime() - (1000 * 60 * 5));
+
+        if(beersLast5Minutes.length >= 5) {
+            return SlackService.sendMessageToChannel(event.channel, `Woah there ${user.name}, slow down! You're cut off for now (5 beers in 5 minutes.)`, event);
+        } else if(beersLast5Minutes.length - taggedUsers.length < 0) {
+            return SlackService.sendMessageToChannel(event.channel, `Sorry ${user.name}, you can't owe that many beers right now... (5 beers in 5 minutes, available: ${(5 - beersLast5Minutes.length)})`, event);
+        }
+
         taggedUsers.forEach(slackId => {
             MongoService.addBeer(user, slackId, null);
             SlackService.sendIM(slackId, `<@${user.id}> owes you a :${BEER_EMOJI_NAME}:!`);

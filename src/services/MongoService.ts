@@ -32,6 +32,32 @@ class MongoService {
     }
 
     /**
+     * Checks if a beer has already been given to this message
+     * @param {SlackUser} giver The person giving the beer for a message 
+     * @param {string} userId The user receiving the beer 
+     * @param {SlackMessage} message The message 
+     */
+    async doesBeerAlreadyExist(giver: SlackUser, userId: string, message: SlackMessage) {
+        return await BeerModel.exists({ from_slack_id: giver.id, to_slack_id: userId, 'message.sent_at': Math.floor(parseInt(message.ts) * 1000) });
+    }
+
+    /**
+     * Retrieves {@link Beer} documents that have been given by the user since the given date
+     * @param {SlackUser} giver The person giving the beer 
+     * @param {number} jsTimestamp The earliest time to check 
+     */
+    async getBeersGivenSince(giver: SlackUser, jsTimestamp: number) {
+        const beers = await BeerModel.find({ 
+            from_slack_id: giver.id, 
+            sent_at: {
+                $gte: jsTimestamp
+            }
+        });
+
+        return beers;
+    }
+
+    /**
      * Add a {@link Beer} and the message it was linked to, to the database
      * @param {SlackUser} giver The user giving the beer 
      * @param {SlackMessage} message The message containing the {@link SlackUser} to send the beer to 
